@@ -1,9 +1,21 @@
-fid = fopen('rfc2795.txt');
-text = fread(fid);
+text = fileread('rfc2795.txt');
 
-t = 'A' : 'Z';
-text = upper(text);
-n = hist(double(text),1:90); 
+% nr 1
+[y, x] = groupcounts(double(text)') ;
 
-plot(double(t), n(t));
-n(t)
+figure;
+
+plot(x,y,'Color',[0,1.0,0]);
+
+xlabel('Zeichen (sortiert)');
+ylabel('Häufigkeit');
+
+
+% nr 2
+[v, i] = maxk(y, 10); % 14 = h
+
+b = bar(v);
+set(b,'FaceColor',[1.0,0.7,0]);
+set(gca,'xticklabel',char(x(i)));
+xlabel('Zeichen');
+ylabel('Häufigkeit');
