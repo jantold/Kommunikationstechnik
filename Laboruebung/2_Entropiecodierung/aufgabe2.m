@@ -50,7 +50,10 @@ for i = {shannonenco_ret huffmanenco_ret code'}
 end
 %% 4.2
 threshold = 1000
-names = ["shannonenco_ret" "huffmanenco_ret" "code"]
+names = ["shannonenco_ret" "huffmanenco_ret" "arith"]
+redundancy_array = {[] [] []}
+average_length = {[] [] []}
+
 for ii = 0:20
     r  = randi([0, 128], 1, threshold);
     name_number = 1;
@@ -72,6 +75,7 @@ for ii = 0:20
     [alphabet,~,seq]=unique(input);
     counts = histc(input,alphabet);
     code = arithenco(seq,counts);
+    
     disp("--------------------------------------------------------------------")
     for i = {shannonenco_ret huffmanenco_ret code'}
         [y, x] = groupcounts(cell2mat(i.')');
@@ -89,6 +93,24 @@ for ii = 0:20
         
         fprintf("Entropie der Nachrichtenquelle: %s\n", num2str(entropy));
         fprintf("Redundanz der Nachrichtenquelle: %s\n", num2str( redundancy - entropy));
+        
+        redundancy_array{name_number}(end + 1) = redundancy;
+        average_length{name_number}(end + 1) = length(i{:}) / threshold;
         name_number = name_number + 1;
     end
+end
+figure;
+xlabel('Wort');
+ylabel('Häufigkeit');
+
+for p = redundancy_array
+    
+    plot(1:21,cell2mat(p))
+end
+figure;
+xlabel('Wort');
+ylabel('durchschnittliche laenge');
+for p = average_length
+    
+    plot(1:21,cell2mat(p))
 end
