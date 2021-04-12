@@ -1,7 +1,7 @@
 %%Auftrittswahrscheinlichkeiten
 %string = 'Hochschule';
 string = fileread('rfc2795.txt');
-
+%string = 'hochschule';
 lower_string = lower(string);
 [y, x] = groupcounts(double(lower_string)');
 
@@ -11,16 +11,13 @@ y_prob = y/sum(y);
 
 y_tmp = log2(1./y_prob);
 
-
-
-entropy = sum(y_prob .* y_tmp);
+entropy_total_text = sum(y_prob .* y_tmp);
 %% shannonfanodict
 shannon = shannonfanodict(char(x), y_prob);
 shannonenco_ret = huffmanenco(double(lower_string), shannon);
 %% huffmandeco
 huffman = huffmandict(x, y_prob);
 huffmanenco_ret = huffmanenco(double(lower_string), huffman);
-char(huffmandeco(huffmanenco_ret, huffman))
 %% arithenco
 input=double(lower_string);
 [alphabet,~,seq]=unique(input);
@@ -28,7 +25,7 @@ counts = histc(input,alphabet);
 code = arithenco(seq,counts);
 dseq = arithdeco(code,counts,length(input));
 
-%% bti_length
+%% bit_length
 fprintf('shannon %d huffman %d arithm %d\n', length(shannonenco_ret), length(huffmanenco_ret), length(code))
 
 %% 3.5
@@ -50,34 +47,45 @@ for i = {shannonenco_ret huffmanenco_ret code'}
 end
 %% 4.2
 threshold = 1000
-names = ["shannonenco_ret" "huffmanenco_ret" "arith"]
-redundancy_array = {[] [] []}
+names = ["shannon" "huffman" "arith"]
 average_length = {[] [] []}
 
-for ii = 0:20
-    r  = randi([0, 128], 1, threshold);
+lower_string  = lower_string(randi(length(lower_string),[20,threshold]));
+
+for ii = 1:20
     name_number = 1;
-    lower_string = r;
-    [y, x] = groupcounts(lower_string');
-
-    y_prob = y/sum(y);
-
-    y_tmp = log2(1./y_prob);
     
     % shannonfanodict
-    shannon = shannonfanodict(char(x), y_prob);
-    shannonenco_ret = huffmanenco(double(lower_string), shannon);
+    shannonenco_ret = huffmanenco(double(lower_string(ii,:)), shannon);
     % huffmandeco
-    huffman = huffmandict(x, y_prob);
-    huffmanenco_ret = huffmanenco(double(lower_string), huffman);
+    huffmanenco_ret = huffmanenco(double(lower_string(ii,:)), huffman);
     % arithenco
-    input=double(lower_string);
-    [alphabet,~,seq]=unique(input);
-    counts = histc(input,alphabet);
+    [alphabet,~,seq]=unique(double(lower_string(ii,:)));
     code = arithenco(seq,counts);
     
-    disp("--------------------------------------------------------------------")
-    for i = {shannonenco_ret huffmanenco_ret code'}
+    for i = {shannonenco_ret huffmanenco_ret code' }
+        average_length{name_number}(end + 1) = (length(i{:}) / threshold) / entropy_total_text;
+        name_number = name_number + 1;
+    end
+end
+
+
+
+figure;
+hold on
+xlabel('Wort');
+ylabel('durchschnittliche laenge');
+
+i = 1;
+for p = average_length
+    plot(1:20, cell2mat(p.'));
+    i = i + 1;
+end
+legend(names)
+hold off
+
+
+%{ 
         [y, x] = groupcounts(cell2mat(i.')');
 
         summe = sum(y);
@@ -93,24 +101,4 @@ for ii = 0:20
         
         fprintf("Entropie der Nachrichtenquelle: %s\n", num2str(entropy));
         fprintf("Redundanz der Nachrichtenquelle: %s\n", num2str( redundancy - entropy));
-        
-        redundancy_array{name_number}(end + 1) = redundancy;
-        average_length{name_number}(end + 1) = length(i{:}) / threshold;
-        name_number = name_number + 1;
-    end
-end
-figure;
-xlabel('Wort');
-ylabel('Häufigkeit');
-
-for p = redundancy_array
-    
-    plot(1:21,cell2mat(p))
-end
-figure;
-xlabel('Wort');
-ylabel('durchschnittliche laenge');
-for p = average_length
-    
-    plot(1:21,cell2mat(p))
-end
+         %}
