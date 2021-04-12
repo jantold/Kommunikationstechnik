@@ -72,7 +72,7 @@ for ii = 0:20
     [alphabet,~,seq]=unique(input);
     counts = histc(input,alphabet);
     code = arithenco(seq,counts);
-    disp("--------------------------------------------------------------------")
+    f
     for i = {shannonenco_ret huffmanenco_ret code'}
         [y, x] = groupcounts(cell2mat(i.')');
 
