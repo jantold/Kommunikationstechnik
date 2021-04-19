@@ -1,10 +1,22 @@
 import math
 
 
-def frombits(bits):
+def tobits(s):
+    result = []
+    for c in s:
+        if c.isnumeric():
+            print("true")
+            c = int(c)
+        bits = bin(ord(c))[2:]
+        bits = '000000'[len(bits):] + bits
+        result.extend([int(b) for b in bits])
+    return result
+
+
+def frombits(bits, bits_count=8):
     chars = []
-    for b in range(len(bits) // 8):
-        byte = bits[b*8:(b+1)*8]
+    for b in range(len(bits) // bits_count):
+        byte = bits[b*bits_count:(b+1)*bits_count]
         chars.append(chr(int(''.join([str(bit) for bit in byte]), 2)))
     return ''.join(chars)
 
@@ -60,3 +72,7 @@ print("Alphabet:", alphabet)
 
 
 print(lempel_ziv_decode(bitstring, list_tuple, 3, len(test), alphabet))
+
+print("test")
+print(tobits('3'))
+print(frombits(tobits('3'), bits_count=6))
