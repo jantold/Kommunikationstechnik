@@ -1,11 +1,14 @@
 import math
 from threading import Thread, Lock
 
-printLock = Lock()
+bestLock = Lock()
+plotLock = Lock()
 
 best_bits_rueckwertsref = 0
 best_bits_laenge_zeichenkette = 0
 best_bitstring_length = 0
+# bits_rueckwertsref, bits_laenge_zeichenkette, bitstring_length
+surface_plot = [[], [], []]
 
 
 def tobits(s):
@@ -69,6 +72,7 @@ def lempel_ziv_decode(bitstring, list_tuple, bits_rueckwertsref, bits_laenge_zei
 
 
 def threading(content, bits_rueckwertsref, bits_laenge_zeichenkette):
+    global surface_plot
     global best_bits_rueckwertsref
     global best_bits_laenge_zeichenkette
     global best_bitstring_length
@@ -86,15 +90,23 @@ def threading(content, bits_rueckwertsref, bits_laenge_zeichenkette):
         len(list_tuple) * bits_laenge_zeichenkette + \
         len(list_tuple) * bits_per_char
 
+    plotLock.acquire()
+
+    surface_plot[0].append(bits_rueckwertsref)
+    surface_plot[1].append(bits_laenge_zeichenkette)
+    surface_plot[2].append(bitstring_length)
+
+    plotLock.release()
+
     # print('len:', bitstring_length)
     if bitstring_length <= best_bitstring_length:
-        printLock.acquire()
+        bestLock.acquire()
 
         best_bitstring_length = bitstring_length
         best_bits_rueckwertsref = bits_rueckwertsref
         best_bits_laenge_zeichenkette = bits_laenge_zeichenkette
 
-        printLock.release()
+        bestLock.release()
 
 
 with open('rfc2795.txt') as f:
@@ -131,3 +143,6 @@ print('bits_laenge_zeichenkette:', best_bits_laenge_zeichenkette)
 # print("content")
 # print(tobits('3'))
 # print(frombits(tobits('3'), bits_count=6))
+
+
+print(surface_plot)
