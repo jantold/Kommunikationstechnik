@@ -8,6 +8,7 @@ plotLock = Lock()
 best_bits_rueckwertsref = 0
 best_bits_laenge_zeichenkette = 0
 best_bitstring_length = 0
+best_list_tuple = None
 # bits_rueckwertsref, bits_laenge_zeichenkette, bitstring_length
 surface_plot = [[], [], []]
 
@@ -82,6 +83,7 @@ def threading(content, bits_rueckwertsref, bits_laenge_zeichenkette):
     global best_bits_rueckwertsref
     global best_bits_laenge_zeichenkette
     global best_bitstring_length
+    global best_list_tuple
 
     list_tuple, bitstring, alphabet = lempel_ziv_encode(
         content, bits_rueckwertsref, bits_laenge_zeichenkette)
@@ -108,6 +110,7 @@ def threading(content, bits_rueckwertsref, bits_laenge_zeichenkette):
     if bitstring_length <= best_bitstring_length:
         bestLock.acquire()
 
+        best_list_tuple = list_tuple
         best_bitstring_length = bitstring_length
         best_bits_rueckwertsref = bits_rueckwertsref
         best_bits_laenge_zeichenkette = bits_laenge_zeichenkette
@@ -127,31 +130,32 @@ def surfaceplot():
     plt.show()
 
 
+content = ''
 with open('rfc2795.txt') as f:
     bits_per_char = 7
     content = f.readlines()
 
-    # content = "BANANENANBAU"
-    # content = "FISCHERSFRITZFISCHTFRISCHEFISCHE"
-    content = ''.join(content)
-    best_bits_rueckwertsref = 0
-    best_bits_laenge_zeichenkette = 0
-    best_bitstring_length = math.inf
-    max_len = math.ceil(math.log2(len(content))) + 1
+# content = "BANANENANBAU"
+# content = "FISCHERSFRITZFISCHTFRISCHEFISCHE"
+content = ''.join(content)
+best_bits_rueckwertsref = 0
+best_bits_laenge_zeichenkette = 0
+best_bitstring_length = math.inf
+max_len = math.ceil(math.log2(len(content))) + 1
 
-    threads = []
-    for bits_rueckwertsref in range(1, max_len):
+threads = []
+for bits_rueckwertsref in range(1, max_len):
 
-        # bits fuer zeichenkette <= bits_rueckwertsref
-        for bits_laenge_zeichenkette in range(1, bits_rueckwertsref+1):
+    # bits fuer zeichenkette <= bits_rueckwertsref
+    for bits_laenge_zeichenkette in range(1, bits_rueckwertsref+1):
 
-            t = Thread(target=threading, args=(
-                content, bits_rueckwertsref, bits_laenge_zeichenkette))
-            t.start()
-            threads.append(t)
+        t = Thread(target=threading, args=(
+            content, bits_rueckwertsref, bits_laenge_zeichenkette))
+        t.start()
+        threads.append(t)
 
-    for t in threads:
-        t.join()
+for t in threads:
+    t.join()
 
 print('only lempel-ziv best combination -----')
 print('bitstring_length:', best_bitstring_length)
@@ -164,3 +168,67 @@ print('bits_laenge_zeichenkette:', best_bits_laenge_zeichenkette)
 
 # surfaceplot
 surfaceplot()
+print('-----------------------------')
+
+# huffman
+
+
+def huffman_encode(data):
+    import heapq
+    from collections import defaultdict
+
+    def encode(frequency):
+        heap = [[weight, [symbol, '']] for symbol, weight in frequency.items()]
+        heapq.heapify(heap)
+        while len(heap) > 1:
+            lo = heapq.heappop(heap)
+            hi = heapq.heappop(heap)
+            for pair in lo[1:]:
+                pair[1] = '0' + pair[1]
+            for pair in hi[1:]:
+                pair[1] = '1' + pair[1]
+            heapq.heappush(heap, [lo[0] + hi[0]] + lo[1:] + hi[1:])
+        return sorted(heapq.heappop(heap)[1:], key=lambda p: (len(p[-1]), p))
+
+    frequency = defaultdict(int)
+    for symbol in data:
+        frequency[symbol] += 1
+
+    huff = encode(frequency)
+
+    # print('Symbol'.ljust(10) + "Weight".ljust(10) + "Huffman Code")
+    huffman_dict = {}
+    for p in huff:
+        # print(p[0].ljust(10) + str(frequency[p[0]]).ljust(10) + p[1])
+        huffman_dict[p[0]] = p[1]
+
+    return ''.join([huffman_dict[data[i]] for i in range(len(data))])
+
+
+list_back = []
+list_chars = []
+list_next = []
+for b, c, n in best_list_tuple:
+    list_back.append(b)
+    list_chars.append(c)
+    list_next.append(n)
+
+# print(best_list_tuple)
+
+
+list_back_as_str = ''.join(str(i) for i in list_back)
+list_chars_as_str = ''.join(str(i) for i in list_chars)
+lsit_next_as_str = ''.join(str(i) for i in list_next)
+# print(list_back)
+# print(list_back_as_str)
+# print(list_chars)
+# print(list_chars_as_str)
+# print(list_next)
+# print(lsit_next_as_str)
+huffman_dicts_len = len(huffman_encode(list_back_as_str)) + len(
+    huffman_encode(list_chars_as_str)) + len(huffman_encode(lsit_next_as_str))
+
+print('huffman:', huffman_dicts_len)
+
+print('Gewinn: huffman - no_huffman:',
+      best_bitstring_length - huffman_dicts_len)
