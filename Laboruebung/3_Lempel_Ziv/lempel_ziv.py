@@ -1,4 +1,11 @@
 import math
+from threading import Thread, Lock
+
+printLock = Lock()
+
+best_bits_rueckwertsref = 0
+best_bits_laenge_zeichenkette = 0
+best_bitstring_length = 0
 
 
 def tobits(s):
@@ -61,18 +68,66 @@ def lempel_ziv_decode(bitstring, list_tuple, bits_rueckwertsref, bits_laenge_zei
     return ret
 
 
-test = "BANANENANBAU"
-# test = "FISCHERSFRITZFISCHTFRISCHEFISCHE"
-list_tuple, bitstring, alphabet = lempel_ziv_encode(test, 3, len(test))
-for i in list_tuple:
-    print(i)
+def threading(content, bits_rueckwertsref, bits_laenge_zeichenkette):
+    global best_bits_rueckwertsref
+    global best_bits_laenge_zeichenkette
+    global best_bitstring_length
 
-print("Bitstring:", bitstring)
-print("Alphabet:", alphabet)
+    list_tuple, bitstring, alphabet = lempel_ziv_encode(
+        content, bits_rueckwertsref, bits_laenge_zeichenkette)
+
+    # decode
+    # print(lempel_ziv_decode(bitstring, list_tuple,
+    #                         bits_rueckwertsref, bits_laenge_zeichenkette, alphabet))
+
+    # bit-length - only lempel_ziv
+    # only lempel-ziv -----
+    bitstring_length = len(list_tuple) * bits_rueckwertsref + \
+        len(list_tuple) * bits_laenge_zeichenkette + \
+        len(list_tuple) * bits_per_char
+
+    # print('len:', bitstring_length)
+    if bitstring_length <= best_bitstring_length:
+        printLock.acquire()
+
+        best_bitstring_length = bitstring_length
+        best_bits_rueckwertsref = bits_rueckwertsref
+        best_bits_laenge_zeichenkette = bits_laenge_zeichenkette
+
+        printLock.release()
 
 
-print(lempel_ziv_decode(bitstring, list_tuple, 3, len(test), alphabet))
+with open('rfc2795.txt') as f:
+    bits_per_char = 7
+    content = f.readlines()
 
-print("test")
-print(tobits('3'))
-print(frombits(tobits('3'), bits_count=6))
+    # content = "BANANENANBAU"
+    # content = "FISCHERSFRITZFISCHTFRISCHEFISCHE"
+    content = ''.join(content)
+    best_bits_rueckwertsref = 0
+    best_bits_laenge_zeichenkette = 0
+    best_bitstring_length = math.inf
+    max_len = math.ceil(math.log2(len(content))) + 1
+
+    threads = []
+    for bits_rueckwertsref in range(1, max_len):
+
+        # bits fuer zeichenkette <= bits_rueckwertsref
+        for bits_laenge_zeichenkette in range(1, bits_rueckwertsref+1):
+
+            t = Thread(target=threading, args=(
+                content, bits_rueckwertsref, bits_laenge_zeichenkette))
+            t.start()
+            threads.append(t)
+
+    for t in threads:
+        t.join()
+
+print('only lempel-ziv best combination -----')
+print('bitstring_length:', best_bitstring_length)
+print('bits_rueckwertsref:', best_bits_rueckwertsref)
+print('bits_laenge_zeichenkette:', best_bits_laenge_zeichenkette)
+
+# print("content")
+# print(tobits('3'))
+# print(frombits(tobits('3'), bits_count=6))
