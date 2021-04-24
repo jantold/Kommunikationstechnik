@@ -1,5 +1,6 @@
 import math
 from threading import Thread, Lock
+import matplotlib.pyplot as plt
 
 bestLock = Lock()
 plotLock = Lock()
@@ -9,6 +10,11 @@ best_bits_laenge_zeichenkette = 0
 best_bitstring_length = 0
 # bits_rueckwertsref, bits_laenge_zeichenkette, bitstring_length
 surface_plot = [[], [], []]
+
+label_num = {'bits_rueckwertsref': 0,
+             'bits_laenge_zeichenkette': 1, 'bitstring_length': 2}
+label_text = ['bits_rueckwertsref',
+              'bits_laenge_zeichenkette', 'bitstring_length']
 
 
 def tobits(s):
@@ -109,6 +115,18 @@ def threading(content, bits_rueckwertsref, bits_laenge_zeichenkette):
         bestLock.release()
 
 
+def surfaceplot():
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    ax.plot_trisurf(surface_plot[label_num[label_text[0]]], surface_plot[label_num[label_text[1]]],
+                    surface_plot[label_num[label_text[2]]], cmap=plt.cm.viridis, linewidth=0.2)
+
+    ax.set_xlabel(label_text[0], fontweight='bold')
+    ax.set_ylabel(label_text[1], fontweight='bold')
+    ax.set_zlabel(label_text[2], fontweight='bold')
+    plt.show()
+
+
 with open('rfc2795.txt') as f:
     bits_per_char = 7
     content = f.readlines()
@@ -144,5 +162,5 @@ print('bits_laenge_zeichenkette:', best_bits_laenge_zeichenkette)
 # print(tobits('3'))
 # print(frombits(tobits('3'), bits_count=6))
 
-
-print(surface_plot)
+# surfaceplot
+surfaceplot()
