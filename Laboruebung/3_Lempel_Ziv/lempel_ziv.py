@@ -107,46 +107,49 @@ def threading(content, bits_rueckwertsref, bits_laenge_zeichenkette):
     plotLock.release()
 
     # print('len:', bitstring_length)
+    bestLock.acquire()
     if bitstring_length <= best_bitstring_length:
-        bestLock.acquire()
 
         best_list_tuple = list_tuple
         best_bitstring_length = bitstring_length
         best_bits_rueckwertsref = bits_rueckwertsref
         best_bits_laenge_zeichenkette = bits_laenge_zeichenkette
 
-        bestLock.release()
+    bestLock.release()
 
 
 def surfaceplot():
     fig = plt.figure()
     ax = fig.gca(projection='3d')
-    ax.plot_trisurf(surface_plot[label_num[label_text[0]]], surface_plot[label_num[label_text[1]]],
-                    surface_plot[label_num[label_text[2]]], cmap=plt.cm.viridis, linewidth=0.2)
+    ax.plot_trisurf(surface_plot[label_num['bits_rueckwertsref']], surface_plot[label_num['bits_laenge_zeichenkette']],
+                    surface_plot[label_num['bitstring_length']], cmap=plt.cm.viridis, linewidth=0.2)
 
-    ax.set_xlabel(label_text[0], fontweight='bold')
-    ax.set_ylabel(label_text[1], fontweight='bold')
-    ax.set_zlabel(label_text[2], fontweight='bold')
+    ax.set_xlabel(
+        label_text[label_num['bits_rueckwertsref']], fontweight='bold')
+    ax.set_ylabel(
+        label_text[label_num['bits_laenge_zeichenkette']], fontweight='bold')
+    ax.set_zlabel(label_text[label_num['bitstring_length']], fontweight='bold')
     plt.show()
 
 
-content = ''
+# content = "BANANENANBAU"
+# content = "FISCHERSFRITZFISCHTFRISCHEFISCHE"
+bits_per_char = 7
 with open('rfc2795.txt') as f:
     bits_per_char = 7
     content = f.readlines()
 
-# content = "BANANENANBAU"
-# content = "FISCHERSFRITZFISCHTFRISCHEFISCHE"
 content = ''.join(content)
 best_bits_rueckwertsref = 0
 best_bits_laenge_zeichenkette = 0
 best_bitstring_length = math.inf
-max_len = math.ceil(math.log2(len(content))) + 1
+max_len = math.ceil(math.log2(len(content))) + 1  # +1 cuz exclusive
 
 threads = []
 for bits_rueckwertsref in range(1, max_len):
 
     # bits fuer zeichenkette <= bits_rueckwertsref
+    # +1 cuz exclusive
     for bits_laenge_zeichenkette in range(1, bits_rueckwertsref+1):
 
         t = Thread(target=threading, args=(
@@ -196,10 +199,8 @@ def huffman_encode(data):
 
     huff = encode(frequency)
 
-    # print('Symbol'.ljust(10) + "Weight".ljust(10) + "Huffman Code")
     huffman_dict = {}
     for p in huff:
-        # print(p[0].ljust(10) + str(frequency[p[0]]).ljust(10) + p[1])
         huffman_dict[p[0]] = p[1]
 
     return ''.join([huffman_dict[data[i]] for i in range(len(data))])
@@ -225,6 +226,7 @@ lsit_next_as_str = ''.join(str(i) for i in list_next)
 # print(list_chars_as_str)
 # print(list_next)
 # print(lsit_next_as_str)
+
 huffman_dicts_len = len(huffman_encode(list_back_as_str)) + len(
     huffman_encode(list_chars_as_str)) + len(huffman_encode(lsit_next_as_str))
 
