@@ -72,6 +72,7 @@ end
 plot_y
 bar(P, plot_y)
 
+
 %% Task 3
 %1.
 %G = [1 1 1 1 0 0 1 0; 0 0 1 1 1 1 0 1];
