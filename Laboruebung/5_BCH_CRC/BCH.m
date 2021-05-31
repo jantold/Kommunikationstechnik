@@ -3,7 +3,7 @@
 % t_min >= 2t + 1
 q = 2;
 k = 500*8;
-p = 0.5;
+p = 0.5; % percentage
 max_frame_fehlerrate = 0.01;
 
 % Task 1 ------------------------------------------------
@@ -31,12 +31,10 @@ max_frame_fehlerrate = 0.01;
 t = 34;
 m = 14; %13
 
-
 % Task 2 ------------------------------------------------
 n = 2^m - 1;
-d_min = 2*t + 1;
-max_parity_bits = m * t;
-
+% d_min = 2*t + 1;
+% max_parity_bits = m * t;
 % check n in bchnumerr(n);
 
 % Task 3 ------------simulation----------------------
@@ -45,11 +43,35 @@ max_parity_bits = m * t;
 gen_poly = bchgenpoly(n, k);
 enc = comm.BCHEncoder(n, k, gen_poly);
 dec = comm.BCHDecoder(n, k, gen_poly);
+errorRate = comm.ErrorRate();
 
+for counter = 1:20
+    
+    data = randi([0 1], k, 1);
+    encodedData = step(enc, data);
+
+    % generate errors
+    N = length(encodedData);
+    idx = rand(N,1);
+    errors = randi([0 1], [N 1]);
+    errors(idx <  p/100) = randi([0 1], [sum(idx < p/100) 1]);
+  
+    % encodedData = mod([1,2,3,4], 2);
+    d = mod([1,2,3,4]');
+    
+  
+	receivedBits = step(dec, encodedData);
+	errorStats = step(errorRate, data, receivedBits);
+end
+
+fprintf('Error rate = %f\nNumber of errors = %d\n', ...
+  errorStats(1), errorStats(2))
+
+%{
 mod = comm.DPSKModulator('BitInput',true);
 chan = comm.AWGNChannel(...
          'NoiseMethod','Signal to noise ratio (SNR)','SNR',10);
-demod = comm.DPSKDemodulator('BitOutput',true);           
+demod = comm.DPSKDemodulator('BitOutput',true);
 errorRate = comm.ErrorRate();
 
 for counter = 1:20
@@ -61,7 +83,7 @@ for counter = 1:20
   receivedBits = step(dec, demodSignal);
   errorStats = step(errorRate, data, receivedBits);
 end
-
 fprintf('Error rate = %f\nNumber of errors = %d\n', ...
   errorStats(1), errorStats(2))
 
+%}
