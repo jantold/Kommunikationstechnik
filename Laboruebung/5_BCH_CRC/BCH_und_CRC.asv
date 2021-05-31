@@ -16,7 +16,6 @@ bch_dec = comm.BCHDecoder(n, k, bch_gen_poly);
 
          
 errorRate = comm.ErrorRate();
-errorFrame = comm.ErrorRate();
 
 for idx = 1:M
     % k - crc-parityBits
@@ -24,12 +23,9 @@ for idx = 1:M
     crc_encodedData = step(crcG, data);
     bch_encodedData = step(bch_enc, crc_encodedData);
     
-    bch_encodedData_err = bsc(bch_encodedData,p); % Binary symmetric channel
+    bch_encodedData = bsc(bch_encodedData,p); % Binary symmetric channel
     
-    
-    errorFrame = step(errorRate, bch_encodedData, bch_encodedData_err);
-    
-    bch_decodedData = step(bch_dec, bch_encodedData_err);
+    bch_decodedData = step(bch_dec, bch_encodedData);
     crc_decodedData = step(crcD, bch_decodedData);
     
     errorStats = step(errorRate, data, crc_decodedData);
@@ -37,9 +33,6 @@ end
 
 fprintf('Residual error probability = %f\nNumber of errors = %d\n', ...
   errorStats(1), errorStats(2))
-
-fprintf('Frame error rate = %f\nNumber of errors = %d\n', ...
-  errorFrame(1), errorFrame(2))
 
 % receivedBits = bch_dec(demodSignal);
 % [~,err] = crcD(codeword_with_error');

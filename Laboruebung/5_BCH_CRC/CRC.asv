@@ -29,14 +29,10 @@ for f = 1:30
     x_2 = [x_2, f];
     y_2 = [y_2, nicht_gef_uebertr_fehler_prozent];
 end
-%%
-
-
-figure(1);clf
-
-hold on
 
 plot(x_1, y_1, 'DisplayName', 'USB', 'Color', [0,1.0,0]);
+
+hold on
 
 plot(x_2, y_2, 'DisplayName', 'WLAN', 'Color', [1.0,0,0]);
 xlabel('Fehler');
