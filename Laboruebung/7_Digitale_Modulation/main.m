@@ -8,21 +8,23 @@ fs= 64;
 fc = fs/4;
 obj = comm.RectangularQAMModulator('BitInput', true);
 bits_enc = obj(bits);
-qam_signal=rectpulse(bits_enc, fs);
 
 % 3 Amplitudenmodulation - stimmt das??
-t = 0:1/fs:1;
-i = sin(2*pi*fc*t) + qam_signal;
-q = sin(2*pi*fc*t) + qam_signal;
-sa_en = modulate(i, fc, fs, 'qam', q);
-size(sa_en)
+qam_signal=rectpulse(bits_enc, fs);
 
 % 4
-sa_de= demod(sa_en,fc,fs,'qam');
-size(sa_de);
-dump = intdump(sa_de, fs);
-% size(dump)
-obj = comm.RectangularQAMDemodulator('BitOutput', true);
-bits_dec = obj(sa_de)'
+sa_en = modulate(qam_signal, fc, fs, 'qam', qam_signal);
 
+% 5
+sa_de= demod(sa_en,fc,fs,'qam');
+
+% 6
+y = intdump(sa_de,fs);
+
+% 7
+obj = comm.RectangularQAMDemodulator('BitOutput', true);
+bits_dec = obj(y);
+
+% 8
+biterr(bits_dec, bits)
 
