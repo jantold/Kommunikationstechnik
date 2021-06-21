@@ -13,14 +13,23 @@ bits_enc = obj(bits);
 qam_signal=rectpulse(bits_enc, fs);
 
 % 4
-sa_en = modulate(qam_signal, fc, fs, 'qam', qam_signal);
+sa_en = modulate(real(qam_signal), fc, fs, 'qam', imag(qam_signal));
 
+figure();    
+plot(sa_en);
+
+hold on;
 % 5
-sa_de= demod(sa_en,fc,fs,'qam');
-
+[sa_de_i, sa_de_q] = demod(sa_en,fc,fs,'qam');
+figure();    
+plot(sa_de_i,  'DisplayName', "in phase");
+hold on;
+plot(sa_de_q,  'DisplayName', "quadrature");
+legend();
 % 6
-y = intdump(sa_de,fs);
+y = intdump(sa_de_i +sa_de_q*1i ,fs);
 
+hold on;
 % 7
 obj = comm.RectangularQAMDemodulator('BitOutput', true);
 bits_dec = obj(y);
